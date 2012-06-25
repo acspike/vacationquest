@@ -1,2 +1,4 @@
 
 /boto.conf
+*.pem
+*.ppk
