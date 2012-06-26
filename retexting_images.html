@@ -1,0 +1,39 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+
+var img2canvas = function(selector, context_function) {
+        var img = jQuery(selector).load(function() {
+        var parent = img.wrap('<div />').parent();
+        var alt = img.attr('alt');
+        var width = img.width();
+        var height = img.height();
+        var image = img.get(0);
+        img.replaceWith('<canvas />');
+        var canvas = parent.children().attr({"title": alt, "width": width, "height": height}).get(0);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        
+        context_function(ctx);
+    });
+};
+
+jQuery(document).ready(function() {
+    img2canvas('img[alt="Pidgin 04"]', function(ctx) {
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(145, 130, 100, 18);
+        ctx.fillStyle = '#000';
+        ctx.font = '10pt Arial';
+        ctx.fillText('acspike', 146, 145);
+    });
+});
+//]]>
+</script>
+</head>
+<body>
+<p>I noticed that Olark displays my username in the text of their configuration instructions. I thought it would be nice to replace my user name in the images also. This is accomplished on the client-side using canvas.
+<img alt="Pidgin 04" class="tutorial_image" height="484" src="http://www.olark.com/tut/pidgin/pidgin-04.png" width="344" />
+</body>
+</html>
