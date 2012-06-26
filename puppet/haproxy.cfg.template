@@ -1,0 +1,28 @@
+global
+    daemon
+	maxconn 4096
+	#chroot /usr/share/haproxy
+	user haproxy
+	group haproxy
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option httpchk
+
+frontend http-in
+    bind *:80
+    option http-server-close
+    default_backend servers
+
+backend servers
+    balance	roundrobin
+    server nginx1 %(nginx1)s:80 maxconn 2048
+    server nginx2 %(nginx2)s:80 maxconn 2048
+
+listen stats 127.0.0.1:8080  
+   mode http  
+   stats enable  
+   stats uri /  

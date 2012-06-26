@@ -2,3 +2,4 @@
 /boto.conf
 *.pem
 *.ppk
+/puppet/haproxy.cfg

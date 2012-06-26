@@ -42,7 +42,7 @@ conn = boto.connect_ec2()
 # - create security goups
 # - assign security groups
 # - base configuration
-if 'setup' in sys.argv:
+if 'init' in sys.argv:
     if not conn.get_key_pair(key_name):
         key = conn.create_key_pair(key_name)
         key.save(script_path)
@@ -72,6 +72,50 @@ if 'setup' in sys.argv:
             inst.add_tag(tag_name,tag)
     else:
         print '%s instances with "%s" tag exist ' % (tagged_instances, sec_group_name)
+
+if 'config' in sys.argv:
+    instances = {}
+    for reservation in conn.get_all_instances():
+        for instance in reservation.instances:
+            if tag_name in instance.tags and instance.state=='running':
+                instances[instance.tags[tag_name]] = instance
+                print '%s\t%s\t%s' % (instance.tags[tag_name], instance.private_ip_address, instance.ip_address)
+                
+    proxied_ips = {'nginx1': instances['nginx1'].private_ip_address, 'nginx2': instances['nginx2'].private_ip_address}
+    haproxy_conf_template = open('puppet/haproxy.cfg.template','r').read()
+    haproxy_conf = open('puppet/haproxy.cfg','w')
+    haproxy_conf.write(haproxy_conf_template % proxied_ips)
+    haproxy_conf.close()
+    
+    all_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values()]
+    nginx_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values() if inst.tags[tag_name] in ['nginx1','nginx2']]
+    haproxy_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values() if inst.tags[tag_name] == 'haproxy']
+    siege_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values() if inst.tags[tag_name] in ['siege1','siege2']]
+    
+    from fabric.api import env,run,sudo,put
+    import fabric
+    env.key_filename = key_path
+    try:
+        for host in all_hosts:
+            env.host_string = host
+            sudo('apt-get -q -q update')
+            sudo('apt-get -q -q -y install puppet-common')
+            sudo('rm -rf /root/puppet')
+            put('puppet','/root/',True)
+        
+        for host in nginx_hosts:
+            env.host_string = host
+            sudo('puppet apply /root/puppet/nginx.pp')
+            
+        for host in haproxy_hosts:
+            env.host_string = host
+            sudo('puppet apply /root/puppet/haproxy.pp')
+            
+        for host in siege_hosts:
+            env.host_string = host
+            sudo('puppet apply /root/puppet/siege.pp')
+    finally:
+        fabric.network.disconnect_all()
         
 #test
 # - test base config
@@ -83,7 +127,7 @@ if 'test' in sys.argv:
 # - terminate instances
 # - delete keypair
 # - delete security groups
-if 'teardown' in sys.argv:
+if 'teardown' in sys.argv or 'clean' in sys.argv:
     terminal_instances = []
     for reservation in conn.get_all_instances():
         for instance in reservation.instances:
@@ -94,6 +138,8 @@ if 'teardown' in sys.argv:
         time.sleep(10)
         print '.',
     print
-    
-    #conn.delete_key_pair(key_name)
-    #conn.delete_security_group(sec_group_name)
+
+#clean
+if 'clean' in sys.argv:
+    conn.delete_key_pair(key_name)
+    conn.delete_security_group(sec_group_name)
