@@ -57,8 +57,9 @@ def print_instances():
     instances = get_instances()
     print
     print 'host  \tinternal ip \texternal ip'
-    for instance in instances.values():
-        print '%s\t%s\t%s' % (instance.tags[tag_name], instance.private_ip_address, instance.ip_address)
+    for instance_name in sorted(instances.keys()):
+        instance = instances[instance_name]
+        print '%s\t%s\t%s' % (instance_name, instance.private_ip_address, instance.ip_address)
 
 def create_key_pair():
     if not conn.get_key_pair(key_name):
