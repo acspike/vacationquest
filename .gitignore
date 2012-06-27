@@ -3,3 +3,4 @@
 *.pem
 *.ppk
 /puppet/haproxy.cfg
+/venv
