@@ -102,8 +102,8 @@ def provision(filter=None):
     
     #generate haproxy configuration with nginx host ips
     proxied_ips = {'nginx1': instances['nginx1'].private_ip_address, 'nginx2': instances['nginx2'].private_ip_address}
-    haproxy_conf_template = open('puppet/haproxy.cfg.template','r').read()
-    haproxy_conf = open('puppet/haproxy.cfg','w')
+    haproxy_conf_template = open('puppet/haproxy/haproxy.cfg.template','r').read()
+    haproxy_conf = open('puppet/haproxy/haproxy.cfg','w')
     haproxy_conf.write(haproxy_conf_template % proxied_ips)
     haproxy_conf.close()
     
@@ -120,16 +120,12 @@ def provision(filter=None):
                 print '.',
             print
             sudo('rm -rf /root/puppet')
-            put('puppet','/root/',True)
-        
-            if tag.startswith('nginx'):
-                sudo('puppet apply /root/puppet/nginx.pp')
             
-            if tag.startswith('haproxy'):
-                sudo('puppet apply /root/puppet/haproxy.pp')
-                
-            if tag.startswith('siege'):
-                sudo('puppet apply /root/puppet/siege.pp')
+            for tag_prefix in ['nginx','haproxy','siege']:
+                if tag.startswith(tag_prefix):
+                    put('puppet/%s' % (tag_prefix,),'/root',True)
+                    sudo('cd /root && mv %s puppet'  % (tag_prefix,))
+                    sudo('puppet apply /root/puppet/%s.pp' % (tag_prefix))
     finally:
         fabric.network.disconnect_all()
 

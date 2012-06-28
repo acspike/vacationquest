@@ -2,5 +2,5 @@
 /boto.conf
 *.pem
 *.ppk
-/puppet/haproxy.cfg
 /venv
+/puppet/haproxy/haproxy.cfg
