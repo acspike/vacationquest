@@ -1,0 +1,7 @@
+# Note: It is unnecessary to modify the boto.conf file.
+# You will be prompted for your credentials on the 
+# first invocation of quest.py and this file will
+# be created for you.
+[Credentials]
+aws_access_key_id = XXXXXXXXXXXXXXXXXXXX
+aws_secret_access_key = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
