@@ -97,23 +97,23 @@ def create_instances():
     else:
         print '%s instances with "%s" tag exist ' % (tagged_instances, sec_group_name)
 
-def provision():
+def provision(filter=None):
     instances = get_instances()
     
+    #generate haproxy configuration with nginx host ips
     proxied_ips = {'nginx1': instances['nginx1'].private_ip_address, 'nginx2': instances['nginx2'].private_ip_address}
     haproxy_conf_template = open('puppet/haproxy.cfg.template','r').read()
     haproxy_conf = open('puppet/haproxy.cfg','w')
     haproxy_conf.write(haproxy_conf_template % proxied_ips)
     haproxy_conf.close()
     
-    all_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values()]
-    nginx_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values() if inst.tags[tag_name] in ['nginx1','nginx2']]
-    haproxy_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values() if inst.tags[tag_name] == 'haproxy']
-    siege_hosts = ["ubuntu@"+inst.ip_address.encode('ascii','ignore') for inst in instances.values() if inst.tags[tag_name] in ['siege1','siege2']]
-    
     try:
-        for host in all_hosts:
-            env.host_string = host
+        for instance in instances.values():
+            tag = instance.tags[tag_name].encode('ascii','ignore')
+            if filter and not tag.startswith(filter):
+                continue
+            env.host_string = "ubuntu@"+instance.ip_address.encode('ascii','ignore')
+            
             print 'waiting for user_data script to complete',
             while not exists('/root/user_data_script_complete',True):
                 time.sleep(10)
@@ -122,17 +122,14 @@ def provision():
             sudo('rm -rf /root/puppet')
             put('puppet','/root/',True)
         
-        for host in nginx_hosts:
-            env.host_string = host
-            sudo('puppet apply /root/puppet/nginx.pp')
+            if tag.startswith('nginx'):
+                sudo('puppet apply /root/puppet/nginx.pp')
             
-        for host in haproxy_hosts:
-            env.host_string = host
-            sudo('puppet apply /root/puppet/haproxy.pp')
-            
-        for host in siege_hosts:
-            env.host_string = host
-            sudo('puppet apply /root/puppet/siege.pp')
+            if tag.startswith('haproxy'):
+                sudo('puppet apply /root/puppet/haproxy.pp')
+                
+            if tag.startswith('siege'):
+                sudo('puppet apply /root/puppet/siege.pp')
     finally:
         fabric.network.disconnect_all()
 
