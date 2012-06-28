@@ -1,5 +1,29 @@
 Learning some new technologies on vacation
 
+**quest.sh**
+
+a single command to bootstrap a virtualenv and execute quest.py 
+inside of that environment to create and provision servers
+
+You will be prompted for your AWS credentials on the first 
+invocation. Afterward they will be cached in boto.conf.
+
+Assumes the availability of python, its associated development 
+libraries and a functional c compiler
+
+
+**bootstrap.py**
+
+manually bootstrap an appropriate virtualenv inside of the repo
+
+
+**make-bootstrap.py**
+
+regenerate bootstrap.py script
+
+
+**quest.py**
+
 execute quest.py from the containing directory
 
 quest.py should be followed by a list of tasks to perform.
