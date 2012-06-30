@@ -1,0 +1,13 @@
+Baseline:
+    with the original configuration 
+    a single siege reported just over 2000 transactions/sec against a single nginx
+    2 sieges running simultaneously report just over 1000 trans/sec each
+    against haproxy a single siege performed similarly
+    but 2 sieges were able to achieve just over 1300 trans/sec each
+
+
+after changing nginx worker_processes to match the cpu core count at 1 also
+raising worker_connections to 4096 to accomodate for fewer threads
+context switches dropped by approximately half (or more) without significantly 
+affecting the observed performance.
+    
