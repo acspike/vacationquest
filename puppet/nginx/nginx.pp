@@ -22,3 +22,14 @@ service { 'nginx':
   hasstatus => true,
   subscribe => [File['/etc/nginx/nginx.conf'], File['/etc/default/nginx']],
 }
+
+file {'/etc/sysctl.conf':
+  ensure => file,
+  mode => 644,
+  source => '/root/puppet/sysctl.conf',
+}
+
+exec {'/sbin/sysctl -p':
+  before => Service['nginx'],
+  subscribe => File['/etc/sysctl.conf'],
+}

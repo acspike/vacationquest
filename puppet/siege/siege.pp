@@ -8,3 +8,13 @@ file {'/root/.siegerc':
   mode => 644,
   source => '/root/puppet/siegerc',
 }
+
+file {'/etc/sysctl.conf':
+  ensure => file,
+  mode => 644,
+  source => '/root/puppet/sysctl.conf',
+}
+
+exec {'/sbin/sysctl -p':
+  subscribe => File['/etc/sysctl.conf'],
+}
